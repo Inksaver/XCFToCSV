@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -356,7 +356,7 @@ namespace XCFToCSV
             }
             return retValue;
         }
-        public static void Header(string title, string subtitle = "", string foreColor = "", string backColor = "")
+        public static int Header(string title, string subtitle = "", string foreColor = "", string backColor = "")
         {
             SetConsoleColor("fore", foreColor);
             SetConsoleColor("back", backColor);
@@ -370,6 +370,7 @@ namespace XCFToCSV
             Console.Write(titleContent);
             Console.Write(subtitleContent);
             Console.Write(lowerHeader);
+            return 4; // default 4 lines written
         }
     }
 }
