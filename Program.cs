@@ -21,29 +21,27 @@ namespace XCFToCSV
             string imagePath;
             string appPath = Path.GetDirectoryName(path: System.Reflection.Assembly.GetExecutingAssembly().Location) ?? "";
             string[] files = { };
-            XConsole6.Initialise("Gimp .xcf Layer to CSV tool", 80, 22, "White", "Black");
-            XConsole6.Header("Gimp xcf Reader", "For extracting layer coordinates and rectangle sizes", "White", "DarkRed");
-            XConsole6.Sleep(2);
+            XConsole6.Initialise("Gimp .xcf Layer to CSV tool", 80, 22, "White", "Black"); // Setup the console to 80 x 22 White foreground, Black background
+            XConsole6.Header("Gimp xcf Reader", "For extracting layer coordinates and rectangle sizes", "White", "DarkRed"); // Draw the Header White on DarkRed
+            XConsole6.Sleep(2); // Pause for 2 seconds
             // Select file extension
-            int row = XConsole6.Clear(foreColor: "Yellow", backColor: "Black", width: 80, height: 22);
-            row  += XConsole6.Header("Choose your file extension", "File content is identical in all cases (.csv)", "White", "DarkGreen");
-            row += 2;
-            List<string> fileExtensions = new List<string> { "custom...", ".csv", ".txt", ".data", ".xcfdata"  };
+            int row = XConsole6.Clear(foreColor: "Yellow", backColor: "Black", width: 80, height: 22); // Clear the console Yellow on Black 80 x 22. Start row Count
+            row  += XConsole6.Header("Choose your file extension", "File content is identical in all cases (.csv)", "White", "DarkGreen"); // Draw header and increase row Count
+            row += 2; // Add 2 blank lines
+            List<string> fileExtensions = new List<string> { "custom...", ".csv", ".txt", ".data", ".xcfdata"  }; // List of strings to display as a Menu
             int choice = XConsole6.Menu("Select the file extension you require",
                                         fileExtensions,
-                                        row, 0, "White", "Green");
-            string fileExtension = "";
-            if (choice == 0)
+                                        row, 0, "White", "Green"); // Display Menu White on Green. Menu is displayed below the header as row Count is passed
+            string fileExtension = ""; // initialise fileExtension as empty string
+            if (choice == 0) // User has chosen "custom"
             {
                 row = XConsole6.Clear(foreColor: "Yellow", backColor: "Black", width: 80, height: 22);
                 row += XConsole6.Header("Type your file extension without the '.' prefix. Minimum 2 characters, max 10", "File content is identical in all cases (.csv)", "Green", "Black");
                 row += 2;
                 fileExtension = XConsole6.GetString(prompt: "Type the extesion you require 3-10 characters ('.' not required)",
-                                                    withTitle: false, min: 3, max: 10, row: row, windowWidth: 0);
+                                                    withTitle: false, min: 3, max: 10, row: row, windowWidth: 0); // get a string 3-10 characters
                 if (!fileExtension.StartsWith("."))
-                {
                     fileExtension = $".{fileExtension}";
-                }
             }
             else
                 fileExtension = fileExtensions[choice];
@@ -52,9 +50,7 @@ namespace XCFToCSV
             {
                 imagePath = File.ReadAllText(Path.Combine(appPath, "Path.txt"));
                 if (Directory.Exists(imagePath))
-                {
                     files = Directory.GetFiles(imagePath, "*.xcf");
-                }
             }
             else
             {
@@ -68,14 +64,14 @@ namespace XCFToCSV
                     maxFileNameLength = Path.GetFileName(file).Length;
             }
             List<string> fileList = new List<string>();
-            foreach (string file in files)
+            foreach (string file in files) // Create a neat formatted display of file names and output names
             {
                 string inputFile = Path.GetFileName(file).PadRight(maxFileNameLength + 1);
                 string outputFile = inputFile.Substring(0,inputFile.IndexOf("."));
                 outputFile += fileExtension;
                 fileList.Add($"{inputFile} -> {outputFile}");
             }
-            fileList.Insert(0, "Quit");
+            fileList.Insert(0, "Quit"); // Add "Quit" to the top of the list
             bool quit = false;
             while (!quit)
             {
@@ -89,7 +85,7 @@ namespace XCFToCSV
                     string saveFile = Path.Combine(imagePath, Path.GetFileNameWithoutExtension(files[choice - 1]) + fileExtension);
 
                     XConsole6.Clear();
-                    if (File.Exists(saveFile)) File.Delete(saveFile);
+                    if (File.Exists(saveFile)) File.Delete(saveFile); // if file already exists, delete it
 
                     using (MagickImageCollection images = new MagickImageCollection(inputFile))
                     {
@@ -101,9 +97,9 @@ namespace XCFToCSV
                                 if (!images[index].Label.StartsWith("#") && images[index].Label != "ImageBackground" && !images[index].Label.StartsWith("Group:"))
                                 {
                                     Console.WriteLine($"{images[index].Label},{images[index].Page.X},{images[index].Page.Y},{images[index].Width},{images[index].Height}");
-                                    if (index > 1)
+                                    if (index > 1) // terminate line with newline character
                                         f.WriteLine($"{images[index].Label},{images[index].Page.X},{images[index].Page.Y},{images[index].Width},{images[index].Height}");
-                                    else
+                                    else // do not add newline character
                                         f.Write($"{images[index].Label},{images[index].Page.X},{images[index].Page.Y},{images[index].Width},{images[index].Height}");
                                 }
                             }
@@ -111,8 +107,6 @@ namespace XCFToCSV
                     }
                 }
             }
-            //Console.Write("\nEnter to quit");
-            //Console.ReadLine();
         }
     }
 }
