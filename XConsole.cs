@@ -16,7 +16,7 @@ namespace XCFToCSV
     /// In Program.cs 
     /// Set window tilte, width, height, background and foreground colours: size in chars NOT in pixels
     ///     XConsole6.Initialise("Window Title Here", 120, 22, "White", "Blue");
-    /// Add a title block with 2 lines reserved for title and sub-title, surrounded by ascii border:
+    /// Add a title block with 2 lines reserved for title and sub-title, surrounded by utf8 border:
     ///     XConsole6.Header("Header text here","Sub-Header text here","White","DarkRed");
     ///     ╔════════════════════════╗
     ///     ║    Header text here    ║
@@ -56,13 +56,12 @@ namespace XCFToCSV
         static Dictionary<string, ConsoleColor> dictColors = new Dictionary<string, ConsoleColor>();
         static ConsoleColor defaultBackGround = ConsoleColor.Black;
         static ConsoleColor defaultForeGround = ConsoleColor.White;
-        //static ConsoleColor currentBackGround = ConsoleColor.Black;
-        //static ConsoleColor currentForeGround = ConsoleColor.White;
         static int Width = 80;
         static int Height = 25;
 
         public static int Clear(string foreColor = "", string backColor = "", int width = 80, int height = 25)
         {
+            /// Clears console and sets fore / back colours
             if (foreColor == string.Empty)
                 Console.ForegroundColor = defaultForeGround;
             else
@@ -80,6 +79,7 @@ namespace XCFToCSV
         }
         private static void ClearInputField(int row)
         {
+            /// Clears a row of text ready for re-entry
             if (row >= 0)
             {
                 Console.SetCursorPosition(0, row); // left, top 0 based
@@ -89,7 +89,7 @@ namespace XCFToCSV
         }
         private static void ErrorMessage(int row, string errorType, string userInput, double minValue = 0, double maxValue = 0)
         {
-            //row--;
+            /// Displays appropriate error message
             if (row < 0) row = 0;
             string message = "Just pressing the Enter key or spacebar doesn't work"; // default for "noinput"
             if (errorType == "string")
@@ -108,10 +108,10 @@ namespace XCFToCSV
                 message = $"Try entering a decimal number: {userInput} cannot be converted...";
 
             message = $">>> {message} <<<";
-            ClearInputField(row + 1);           // clear current line
+            ClearInputField(row + 1);       // clear current line
             Console.Write(message);         // write message
-            Thread.Sleep(Delay);            // pause 2 seconds
-            ClearInputField(row + 1);           // clear current line
+            Sleep(Delay);                   // pause 2 seconds
+            ClearInputField(row + 1);       // clear current line
         }
         public static bool GetBoolean(string prompt, int row = -1, int windowWidth = 0)
         {
@@ -151,6 +151,7 @@ namespace XCFToCSV
         }
         public static void Initialise(string title, int width, int height, string foreColor, string backColor)
         {
+            /// default Console setup
             Console.Title = title;
             foreach (ConsoleColor color in Enum.GetValues(typeof(ConsoleColor)))
             {
@@ -165,6 +166,7 @@ namespace XCFToCSV
         }
         public static void Initialise(string title, string swidth, string sheight, string foreColor, string backColor)
         {
+            /// Default Console setup
             int width = 80;
             int height = 25;
             int.TryParse(swidth, out width);
@@ -201,6 +203,7 @@ namespace XCFToCSV
         }
         public static int Print(string text = "")
         {
+            /// Implementation of Python print()
             int rows = 1; // assume 1 line of text
             if (text.Contains("\n"))
                 rows += text.Count(x => x == '\n');
@@ -212,13 +215,14 @@ namespace XCFToCSV
             if (delay < 100) delay *= 1000;
             Thread.Sleep(delay);
         }
-        private static int GetMaxLength(string title, List<string> options, int windowWidth = 0)
+        private static int GetMaxLength(string text, List<string> options, int windowWidth = 0)
         {
+            /// Get max length of a list of strings
             if (windowWidth == 0) windowWidth = Console.WindowWidth;
             if (windowWidth > 0)
                 return windowWidth - 2;
 
-            int maxLength = title.Length;
+            int maxLength = text.Length;
             foreach (string line in options)
             {
                 maxLength = Math.Max(maxLength, line.Length + 9);
@@ -230,6 +234,7 @@ namespace XCFToCSV
         }
         private static string ProcessInput(string prompt, double min, double max, string dataType, int row, int windowWidth = 0, string textColour = "White")
         {
+            /// Takes user input and ensures the output string can be converted to the required dataType
             if (windowWidth == 0) windowWidth = Console.WindowWidth;
             bool valid = false;
             string userInput = "";
@@ -245,6 +250,7 @@ namespace XCFToCSV
                 if (dataType == "string")
                 {
                     if (userInput.Length == 0 && min > 0) ErrorMessage(row, "noinput", userInput);
+                    else if (userInput.Length < min) ErrorMessage(row, "string", userInput, min, max);
                     else if (userInput.Length > max) ErrorMessage(row, "string", userInput, min, max);
                     else valid = true;
                 }
@@ -295,6 +301,7 @@ namespace XCFToCSV
         }
         public static void Write(string text, string foreColor = "", string backColor = "")
         {
+            /// Shortened version of Console.Write with colour options
             SetConsoleColor("fore", foreColor);
             SetConsoleColor("back", backColor);
             Console.Write(text);
@@ -303,6 +310,7 @@ namespace XCFToCSV
         }
         public static void WriteLine(string text, string foreColor = "", string backColor = "", string align = "")
         {
+            /// Shortened version of Console.WriteLine with colour and alignment options
             SetConsoleColor("fore", foreColor);
             SetConsoleColor("back", backColor);
             if (align == "Centre" || align == "Center")
@@ -311,17 +319,12 @@ namespace XCFToCSV
                 text = text.PadLeft(Console.WindowWidth / 2  - 1);
             }
             else if (align == "Left" || align == "")
-            {
                 text = text.PadRight(Console.WindowWidth - 2);
-            }
             else if (align == "Menu")
-            {
                 text = text.PadRight(Console.WindowWidth - 2);
-            }
             else //Right align
-            {
                 text = text.PadLeft(Console.WindowWidth - 2);
-            }
+
             Console.WriteLine(text);
         }
         public static string Input(string prompt, string ending = "_")
@@ -343,25 +346,22 @@ namespace XCFToCSV
                         color = "Black";
                 }
                 if (position == "fore")
-                {
-                    //currentForeGround = dictColors[color];
                     Console.ForegroundColor = dictColors[color];
-                }
                 else
-                {
-                    //currentBackGround = dictColors[color];
                     Console.BackgroundColor = dictColors[color];
-                }
+
                 retValue = dictColors[color];
             }
             return retValue;
         }
         public static int Header(string title, string subtitle = "", string foreColor = "", string backColor = "")
         {
+            /// Draws a boxed header with up to 2 lines of text
             SetConsoleColor("fore", foreColor);
             SetConsoleColor("back", backColor);
 
             int windowWidth = Console.WindowWidth - 2;
+            // use String.Format to control spacing. eg 78/2 + 18/2 (title.length = 18) gives {0,48} for title, and {1,31} for "║" for 18 character title
             string titleContent = String.Format("║{0," + ((windowWidth / 2) + (title.Length / 2)) + "}{1," + (windowWidth - (windowWidth / 2) - (title.Length / 2) + 1) + "}", title, "║");
             string subtitleContent = String.Format("║{0," + ((windowWidth / 2) + (subtitle.Length / 2)) + "}{1," + (windowWidth - (windowWidth / 2) - (subtitle.Length / 2) + 1) + "}", subtitle, "║");
             string topHeader   = "╔".PadRight(Console.WindowWidth - 1, '═') + "╗";
