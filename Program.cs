@@ -38,7 +38,7 @@ namespace XCFToCSV
                 row = XConsole6.Clear(foreColor: "Yellow", backColor: "Black", width: 80, height: 22);
                 row += XConsole6.Header("Type your file extension without the '.' prefix. Minimum 2 characters, max 10", "File content is identical in all cases (.csv)", "Green", "Black");
                 row += 2;
-                fileExtension = XConsole6.GetString(prompt: "Type the extesion you require 3-10 characters ('.' not required)",
+                fileExtension = XConsole6.GetString(prompt: "Type the extension you require 3-10 characters ('.' not required)",
                                                     withTitle: false, min: 3, max: 10, row: row, windowWidth: 0); // get a string 3-10 characters
                 if (!fileExtension.StartsWith("."))
                     fileExtension = $".{fileExtension}";
