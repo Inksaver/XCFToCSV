@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Globalization;
 
@@ -56,20 +55,51 @@ namespace XCFToCSV
         static Dictionary<string, ConsoleColor> dictColors = new Dictionary<string, ConsoleColor>();
         static ConsoleColor defaultBackGround = ConsoleColor.Black;
         static ConsoleColor defaultForeGround = ConsoleColor.White;
+        static string FG = defaultForeGround.ToString();
+        static string BG = defaultBackGround.ToString();
         static int Width = 80;
         static int Height = 25;
+        private static string AlignFrameText(string text, string align = "centre")
+        {
+            int windowWidth = Console.WindowWidth - 3; // 2 characters for the frame sides,+1 for fitting to Console.Width
+            if (align == "centre" || align == "center")
+            {
+                text = text.PadLeft(((windowWidth - text.Length) / 2) + text.Length);
+                text = text.PadRight(windowWidth);
+                // one-liner below!
+                // text = text.PadLeft(((windowWidth - text.Length) / 2) + text.Length).PadRight(windowWidth);
+            }
+            else if (align == "right")
+                text = text.PadLeft(windowWidth);   // right align = pad left
+            else 
+                text = text.PadRight(windowWidth);  //left align = PadRight
 
+            return text;
+        }
+        private static void CheckSizeLimits(int width, int height)
+        {
+            if (width > Console.LargestWindowWidth)
+                Width = Console.LargestWindowWidth;
+            if (height > Console.LargestWindowHeight)
+                Height = Console.LargestWindowHeight;
+        }
         public static int Clear(string foreColor = "", string backColor = "", int width = 80, int height = 25)
         {
             /// Clears console and sets fore / back colours
             if (foreColor == string.Empty)
                 Console.ForegroundColor = defaultForeGround;
             else
+            {
                 SetConsoleColor("fore", foreColor);
+                FG = foreColor;
+            }
             if (backColor == string.Empty)
                 Console.BackgroundColor = defaultBackGround;
             else
+            {
                 SetConsoleColor("back", backColor);
+                BG = backColor;
+            }
             CheckSizeLimits(width, height);
             Console.SetWindowSize(Width, Height);
             Console.BufferWidth = Width;
@@ -77,9 +107,11 @@ namespace XCFToCSV
             Console.SetCursorPosition(0, 0);
             return 0;
         }
-        private static void ClearInputField(int row)
+        private static void ClearInputField(int row, string backColour = "")
         {
             /// Clears a row of text ready for re-entry
+            if (backColour != string.Empty)
+                SetConsoleColor("back", backColour);
             if (row >= 0)
             {
                 Console.SetCursorPosition(0, row); // left, top 0 based
@@ -113,107 +145,26 @@ namespace XCFToCSV
             Sleep(Delay);                   // pause 2 seconds
             ClearInputField(row + 1);       // clear current line
         }
-        public static bool GetBoolean(string prompt, int row = -1, int windowWidth = 0)
+        public static bool GetBoolean(string prompt, int row = -1, int windowWidth = 0,
+                                      string textColour = "White", string backColour = "Black")
         {
             /// gets a boolean (yes/no) type entry from the user
-            string userInput = ProcessInput(prompt, min: 1, max: 3, dataType: "bool", row, windowWidth);
+            string userInput = ProcessInput(prompt, min: 1, max: 3, dataType: "bool", row, windowWidth, textColour, backColour);
             return Convert.ToBoolean(userInput);
         }
-        public static double GetRealNumber(string prompt, double min, double max, int row = -1, int windowWidth = 0)
+        public static double GetRealNumber(string prompt, double min, double max, int row = -1, int windowWidth = 0,
+                                           string textColour = "White", string backColour = "Black")
         {
             /// gets a float / double from the user
-            string userInput = ProcessInput(prompt, min, max, dataType: "real", row, windowWidth);
+            string userInput = ProcessInput(prompt, min, max, dataType: "real", row, windowWidth, textColour, backColour);
             return Convert.ToDouble(userInput);
         }
-        public static int GetInteger(string prompt, double min, double max, int row = -1, int windowWidth = 0, string textColour = "White")
+        public static int GetInteger(string prompt, double min, double max, int row = -1, int windowWidth = 0,
+                                     string textColour = "White", string backColour = "Black")
         {
             /// Public Method: gets an integer from the user ///
-            string userInput = ProcessInput(prompt, min, max, dataType: "int", row, windowWidth, textColour = "White");
+            string userInput = ProcessInput(prompt, min, max, dataType: "int", row, windowWidth, textColour, backColour);
             return Convert.ToInt32(userInput);
-        }
-        public static string GetString(string prompt, bool withTitle, int min, int max, int row = -1, int windowWidth = 0)
-        {
-            /// Public Method: gets a string from the user ///
-            string userInput = ProcessInput(prompt, min, max, dataType: "string", row, windowWidth);
-            if (withTitle)
-            {
-                TextInfo textInfo = new CultureInfo("en-UK", false).TextInfo;
-                userInput = textInfo.ToTitleCase(userInput);
-            }
-            return userInput;
-        }
-        private static void CheckSizeLimits(int width, int height)
-        {
-            if (width > Console.LargestWindowWidth)
-                Width = Console.LargestWindowWidth;
-            if (height > Console.LargestWindowHeight)
-                Height = Console.LargestWindowHeight;
-        }
-        public static void Initialise(string title, int width, int height, string foreColor, string backColor)
-        {
-            /// default Console setup
-            Console.Title = title;
-            foreach (ConsoleColor color in Enum.GetValues(typeof(ConsoleColor)))
-            {
-                dictColors.Add(color.ToString(), color);
-            }
-            defaultForeGround = SetConsoleColor("fore", foreColor);
-            defaultBackGround = SetConsoleColor("back", backColor);
-            CheckSizeLimits(width, height);
-            Console.SetWindowSize(width, height);
-            Console.BufferWidth = width;
-            Console.Clear();
-        }
-        public static void Initialise(string title, string swidth, string sheight, string foreColor, string backColor)
-        {
-            /// Default Console setup
-            int width = 80;
-            int height = 25;
-            int.TryParse(swidth, out width);
-            int.TryParse(sheight, out height);
-            Initialise(title, width, height, foreColor, backColor);
-        }
-        public static int Menu(string title, List<string> textLines, int row = -1, int windowWidth = 0, string textColour = "White", string frameColour = "White")
-        {
-            /// displays a menu using the text in 'title', and a list of menu items (string)
-            /// This menu will re-draw until user enters correct data
-            int rows = -1;
-            if (row >= 0) rows = row + textLines.Count + 4;
-            int maxLength = GetMaxLength(title, textLines, windowWidth);
-            //string top = "╔".PadRight(maxLength, '═') + "╗";
-            WriteLine("╔".PadRight(maxLength, '═') + "╗", frameColour, "Black", "Left");
-            Write("║", frameColour);
-            title = title.PadRight(maxLength / 2 + title.Length / 2).PadLeft(maxLength - 1);
-            Write(title, textColour);
-            Write("║\n", frameColour);                                           // print title
-            //string divider = "╠".PadRight(maxLength, '═') + "╣\n";
-            Write("╠".PadRight(maxLength, '═') + "╣\n", frameColour);
-            //WriteLine($"╠{new string('═', maxLength)}╣", frameColour, "Black", "Left");
-            for (int i = 0; i < textLines.Count; i++)
-            {
-                Write("║", frameColour);
-                if (i < 9) Write($"     {i + 1}) {textLines[i].PadRight(maxLength - 9)}", textColour);  // print menu options 5 spaces
-                else Write($"    {i + 1}) {textLines[i].PadRight(maxLength - 9)}", textColour);         // print menu options 4 spaces
-                Write("║\n", frameColour);
-            }
-            WriteLine("╚".PadRight(maxLength, '═') + "╝", frameColour, "Black", "Left");
-            //WriteLine($"╚{new string('═', maxLength)}╝", frameColour);
-            int userInput = GetInteger(prompt: $"Type the number of your choice (1 to {textLines.Count})", min: 1, max: textLines.Count, rows);
-            return userInput - 1;
-        }
-        public static int Print(string text = "")
-        {
-            /// Implementation of Python print()
-            int rows = 1; // assume 1 line of text
-            if (text.Contains("\n"))
-                rows += text.Count(x => x == '\n');
-            Console.WriteLine(text);
-            return rows;
-        }
-        public static void Sleep(int delay)
-        {
-            if (delay < 100) delay *= 1000;
-            Thread.Sleep(delay);
         }
         private static int GetMaxLength(string text, List<string> options, int windowWidth = 0)
         {
@@ -232,7 +183,99 @@ namespace XCFToCSV
                 maxLength += 1;
             return maxLength;
         }
-        private static string ProcessInput(string prompt, double min, double max, string dataType, int row, int windowWidth = 0, string textColour = "White")
+        public static string GetString(string prompt, bool withTitle, int min, int max, int row = -1, int windowWidth = 0,
+                                       string textColour = "White", string backColour = "Black")
+        {
+            /// Public Method: gets a string from the user ///
+            string userInput = ProcessInput(prompt, min, max, dataType: "string", row, windowWidth, textColour, backColour);
+            if (withTitle)
+            {
+                TextInfo textInfo = new CultureInfo("en-UK", false).TextInfo;
+                userInput = textInfo.ToTitleCase(userInput);
+            }
+            return userInput;
+        }
+        public static int Header(string title, string subtitle = "", string textColour = "", string frameColour = "", string backColour = "")
+        {
+            string topHeader = "╔".PadRight(Console.WindowWidth - 2, '═') + "╗";
+            string titleContent = AlignFrameText(title, "centre");
+            string subtitleContent = AlignFrameText(subtitle, "centre");
+            string lowerHeader = "╚".PadRight(Console.WindowWidth - 2, '═') + "╝";
+            WriteLine(topHeader, frameColour, backColour);
+            Write("║", frameColour, backColour);
+            Write(titleContent, textColour, backColour);
+            Write("║\n║", frameColour, backColour);
+            Write(subtitleContent, textColour, backColour);
+            Write("║\n", frameColour, backColour);
+            WriteLine(lowerHeader, frameColour, backColour);
+
+            return 4; // default 4 lines written
+        }
+        public static void Initialise(string title, int width, int height, string foreColor, string backColor)
+        {
+            /// default Console setup
+            Console.Title = title;
+            foreach (ConsoleColor color in Enum.GetValues(typeof(ConsoleColor)))
+            {
+                dictColors.Add(color.ToString(), color);
+            }
+            defaultForeGround = SetConsoleColor("fore", foreColor);
+            defaultBackGround = SetConsoleColor("back", backColor);
+            CheckSizeLimits(width, height);
+            Console.SetWindowSize(width, height);
+            Console.BufferWidth = width;
+            Clear();
+        }
+        public static void Initialise(string title, string swidth, string sheight, string foreColor, string backColor)
+        {
+            /// Default Console setup
+            int width = 80;
+            int height = 25;
+            int.TryParse(swidth, out width);
+            int.TryParse(sheight, out height);
+            Initialise(title, width, height, foreColor, backColor);
+        }
+        public static int Menu(string title, List<string> textLines, int row = -1, int windowWidth = 0,
+                               string textColour = "White", string frameColour = "White", string backColour = "Black")
+        {
+            /// displays a menu using the text in 'title', and a list of menu items (string)
+            /// This menu will re-draw until user enters correct data
+            int rows = -1;
+            if (row >= 0) rows = row + textLines.Count + 4;
+            int maxLength = GetMaxLength(title, textLines, windowWidth);
+            //string top = "╔".PadRight(maxLength, '═') + "╗";
+            WriteLine("╔".PadRight(maxLength, '═') + "╗", frameColour, backColour, "Left");
+            Write("║", frameColour);
+            title = title.PadRight(maxLength / 2 + title.Length / 2).PadLeft(maxLength - 1);
+            Write(title, textColour);
+            Write("║\n", frameColour);                                           // print title
+            //string divider = "╠".PadRight(maxLength, '═') + "╣\n";
+            Write("╠".PadRight(maxLength, '═') + "╣\n", frameColour);
+            //WriteLine($"╠{new string('═', maxLength)}╣", frameColour, "Black", "Left");
+            for (int i = 0; i < textLines.Count; i++)
+            {
+                Write("║", frameColour);
+                if (i < 9) Write($"     {i + 1}) {textLines[i].PadRight(maxLength - 9)}", textColour);  // print menu options 5 spaces
+                else Write($"    {i + 1}) {textLines[i].PadRight(maxLength - 9)}", textColour);         // print menu options 4 spaces
+                Write("║\n", frameColour);
+            }
+            WriteLine("╚".PadRight(maxLength, '═') + "╝", frameColour, backColour, "Left");
+            //WriteLine($"╚{new string('═', maxLength)}╝", frameColour);
+            int userInput = GetInteger(prompt: $"Type the number of your choice (1 to {textLines.Count})", min: 1,
+                                       max: textLines.Count, row: rows, windowWidth: 0, textColour: FG, backColour: BG);
+            return userInput - 1;
+        }
+        public static int Print(string text = "")
+        {
+            /// Implementation of Python print()
+            int rows = 1; // assume 1 line of text
+            if (text.Contains("\n"))
+                rows += text.Count(x => x == '\n');
+            Console.WriteLine(text);
+            return rows;
+        }
+        private static string ProcessInput(string prompt, double min, double max, string dataType, int row, int windowWidth = 0,
+                                           string textColour = "White", string backColour = "Black")
         {
             /// Takes user input and ensures the output string can be converted to the required dataType
             if (windowWidth == 0) windowWidth = Console.WindowWidth;
@@ -240,11 +283,11 @@ namespace XCFToCSV
             string userInput = "";
             while (!valid)
             {
-                ClearInputField(row + 2);
-                ClearInputField(row + 1);
-                ClearInputField(row);
-                WriteLine($"{new string('─', windowWidth - 1)}\n", textColour);
-                WriteLine($"{new string('─', windowWidth - 1)}", textColour);
+                ClearInputField(row + 2, backColour);
+                ClearInputField(row + 1, backColour);
+                ClearInputField(row, backColour);
+                WriteLine($"{new string('─', windowWidth - 1)}\n", textColour, backColour);
+                WriteLine($"{new string('─', windowWidth - 1)}", textColour, backColour);
                 Console.SetCursorPosition(0, row + 1);
                 userInput = Input(prompt);
                 if (dataType == "string")
@@ -299,6 +342,32 @@ namespace XCFToCSV
             }
             return userInput; //string can be converted to bool, int or float
         }
+        private static ConsoleColor SetConsoleColor(string position, string color)
+        {
+            ConsoleColor retValue = ConsoleColor.White;
+            if (color != string.Empty)
+            {
+                if (!dictColors.ContainsKey(color))
+                {
+                    if (position == "fore")
+                        color = "White";
+                    else
+                        color = "Black";
+                }
+                if (position == "fore")
+                    Console.ForegroundColor = dictColors[color];
+                else
+                    Console.BackgroundColor = dictColors[color];
+
+                retValue = dictColors[color];
+            }
+            return retValue;
+        }
+        public static void Sleep(int delay)
+        {
+            if (delay < 100) delay *= 1000;
+            Thread.Sleep(delay);
+        }
         public static void Write(string text, string foreColor = "", string backColor = "")
         {
             /// Shortened version of Console.Write with colour options
@@ -332,45 +401,6 @@ namespace XCFToCSV
             /// Get keyboard input from user (requires Enter )
             Console.Write($"{prompt}{ending}");
             return Console.ReadLine();
-        }
-        private static ConsoleColor SetConsoleColor(string position, string color)
-        {
-            ConsoleColor retValue = ConsoleColor.White;
-            if (color != string.Empty)
-            {
-                if (!dictColors.ContainsKey(color))
-                {
-                    if (position == "fore")
-                        color = "White";
-                    else
-                        color = "Black";
-                }
-                if (position == "fore")
-                    Console.ForegroundColor = dictColors[color];
-                else
-                    Console.BackgroundColor = dictColors[color];
-
-                retValue = dictColors[color];
-            }
-            return retValue;
-        }
-        public static int Header(string title, string subtitle = "", string foreColor = "", string backColor = "")
-        {
-            /// Draws a boxed header with up to 2 lines of text
-            SetConsoleColor("fore", foreColor);
-            SetConsoleColor("back", backColor);
-
-            int windowWidth = Console.WindowWidth - 2;
-            // use String.Format to control spacing. eg 78/2 + 18/2 (title.length = 18) gives {0,48} for title, and {1,31} for "║" for 18 character title
-            string titleContent = String.Format("║{0," + ((windowWidth / 2) + (title.Length / 2)) + "}{1," + (windowWidth - (windowWidth / 2) - (title.Length / 2) + 1) + "}", title, "║");
-            string subtitleContent = String.Format("║{0," + ((windowWidth / 2) + (subtitle.Length / 2)) + "}{1," + (windowWidth - (windowWidth / 2) - (subtitle.Length / 2) + 1) + "}", subtitle, "║");
-            string topHeader   = "╔".PadRight(Console.WindowWidth - 1, '═') + "╗";
-            string lowerHeader = "╚".PadRight(Console.WindowWidth - 1, '═') + "╝";
-            Console.Write(topHeader);
-            Console.Write(titleContent);
-            Console.Write(subtitleContent);
-            Console.Write(lowerHeader);
-            return 4; // default 4 lines written
         }
     }
 }
