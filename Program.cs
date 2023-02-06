@@ -16,35 +16,40 @@ namespace XCFToCSV
 {
     internal class Program
     {
+        const string FG = "White";
+        const string BG = "DarkGray";
         static void Main(string[] args)
         {
             string imagePath;
             string appPath = Path.GetDirectoryName(path: System.Reflection.Assembly.GetExecutingAssembly().Location) ?? "";
             string[] files = { };
-            XConsole6.Initialise("Gimp .xcf Layer to CSV tool", 80, 22, "White", "Black"); // Setup the console to 80 x 22 White foreground, Black background
-            XConsole6.Header("Gimp xcf Reader", "For extracting layer coordinates and rectangle sizes", "White", "DarkRed"); // Draw the Header White on DarkRed
+            XConsole6.Initialise("Gimp .xcf Layer to CSV tool", 80, 22, FG, BG); // Setup the console to 80 x 22 White foreground, Black background
+            XConsole6.Header("Gimp xcf Reader", "For extracting layer coordinates and rectangle sizes", "White", "Yellow","DarkRed"); // Draw the Header White text, yellow frame, DarkRed bg
             XConsole6.Sleep(2); // Pause for 2 seconds
             // Select file extension
-            int row = XConsole6.Clear(foreColor: "Yellow", backColor: "Black", width: 80, height: 22); // Clear the console Yellow on Black 80 x 22. Start row Count
-            row  += XConsole6.Header("Choose your file extension", "File content is identical in all cases (.csv)", "White", "DarkGreen"); // Draw header and increase row Count
+            int row = XConsole6.Clear(foreColor: FG, backColor: BG, width: 80, height: 22); // Clear the console Yellow on Black 80 x 22. Start row Count
+            row  += XConsole6.Header("Choose your file extension", "File content is identical in all cases (.csv)", "White", "Yellow", "DarkGreen"); // Draw the Header White text, yellow frame, DarGreen bg
             row += 2; // Add 2 blank lines
             List<string> fileExtensions = new List<string> { "custom...", ".csv", ".txt", ".data", ".xcfdata"  }; // List of strings to display as a Menu
             int choice = XConsole6.Menu("Select the file extension you require",
                                         fileExtensions,
-                                        row, 0, "White", "Green"); // Display Menu White on Green. Menu is displayed below the header as row Count is passed
+                                        row, 0, FG, "Green", BG); // Display Menu White on Green. Menu is displayed below the header as row Count is passed
             string fileExtension = ""; // initialise fileExtension as empty string
             if (choice == 0) // User has chosen "custom"
             {
-                row = XConsole6.Clear(foreColor: "Yellow", backColor: "Black", width: 80, height: 22);
-                row += XConsole6.Header("Type your file extension without the '.' prefix. Minimum 2 characters, max 10", "File content is identical in all cases (.csv)", "Green", "Black");
+                row = XConsole6.Clear(foreColor: FG, backColor: BG, width: 80, height: 22);
+                row += XConsole6.Header("Type your file extension without the '.' prefix. Minimum 2 characters, max 10",
+                                        "File content is identical in all cases (.csv)", "Green", FG, BG); // Draw the Header Green text, FG frame, BG bg
                 row += 2;
                 fileExtension = XConsole6.GetString(prompt: "Type the extension you require 3-10 characters ('.' not required)",
-                                                    withTitle: false, min: 3, max: 10, row: row, windowWidth: 0); // get a string 3-10 characters
+                                                    withTitle: false, min: 3, max: 10, row: row, windowWidth: 0,
+                                                    textColour:BG, backColour: FG); // get a string 3-10 characters default BG and FG swapped
                 if (!fileExtension.StartsWith("."))
                     fileExtension = $".{fileExtension}";
             }
             else
                 fileExtension = fileExtensions[choice];
+
             // Path.txt allows running from IDE and locating a specific path for data
             if (File.Exists(Path.Combine(appPath, "Path.txt"))) //Path.txt found so .exe not running in target directory (eg from IDE)
             {
@@ -75,9 +80,9 @@ namespace XCFToCSV
             bool quit = false;
             while (!quit)
             {
-                row = XConsole6.Clear(foreColor: "Yellow", backColor: "Black", width: 80, height: 22);
+                row = XConsole6.Clear(foreColor: FG, backColor: BG, width: 80, height: 22);
                 row += 2;
-                choice = XConsole6.Menu("Select the file to read Layer information", fileList, row, 0, "White", "Yellow");
+                choice = XConsole6.Menu("Select the file to read Layer information", fileList, row, 0, FG, "DarkRed", BG);
                 if (choice == 0) quit = true;
                 else
                 {
